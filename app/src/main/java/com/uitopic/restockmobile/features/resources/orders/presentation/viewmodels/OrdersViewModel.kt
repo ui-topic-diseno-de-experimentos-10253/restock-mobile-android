@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uitopic.restockmobile.analytics.RestockAnalytics
 import com.uitopic.restockmobile.core.auth.local.TokenManager
 import com.uitopic.restockmobile.features.auth.domain.models.User
 import com.uitopic.restockmobile.features.profiles.domain.models.Profile
@@ -30,7 +31,8 @@ import javax.inject.Inject
 class OrdersViewModel @Inject constructor(
     private val repository: OrdersRepository,
     private val inventoryRepository: InventoryRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val analytics: RestockAnalytics
 ) : ViewModel() {
 
     // ===== ESTADO PARA LA LISTA DE ÓRDENES =====
@@ -187,18 +189,31 @@ class OrdersViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun submitOrder(
+        durationSeconds: Long,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
+            val correctedLines = _orderBatchItems.value.count { it.quantity != 1.0 }
+            val totalLines = _orderBatchItems.value.size
+            fun trackCompletion(success: Boolean) {
+                analytics.trackFirstOrderCompleted(
+                    success = success,
+                    durationSeconds = durationSeconds,
+                    userRole = getCurrentUserRoleId().toString()
+                )
+            }
+
             try {
                 if (_orderBatchItems.value.isEmpty()) {
+                    trackCompletion(success = false)
                     onError("No items in order")
                     return@launch
                 }
 
                 val currentUserId = getCurrentUserId()
                 if (currentUserId == -1) {
+                    trackCompletion(success = false)
                     onError("User not logged in")
                     return@launch
                 }
@@ -206,6 +221,7 @@ class OrdersViewModel @Inject constructor(
                 val supplierId = _orderBatchItems.value.firstOrNull()?.batch?.userId
 
                 if (supplierId == null) {
+                    trackCompletion(success = false)
                     onError("Supplier not found")
                     return@launch
                 }
@@ -246,14 +262,21 @@ class OrdersViewModel @Inject constructor(
                 val createdOrder = repository.createOrder(order)
 
                 if (createdOrder != null) {
+                    trackCompletion(success = true)
+                    analytics.trackPurchaseOrderCreated(
+                        correctedLines = correctedLines,
+                        totalLines = totalLines
+                    )
                     _orders.value = listOf(createdOrder) + _orders.value
                     applyFilters()
                     clearOrderState()
                     onSuccess()
                 } else {
+                    trackCompletion(success = false)
                     onError("Failed to create order")
                 }
             } catch (e: Exception) {
+                trackCompletion(success = false)
                 onError(e.message ?: "Error creating order")
             }
         }

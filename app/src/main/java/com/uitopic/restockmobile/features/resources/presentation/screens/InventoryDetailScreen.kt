@@ -29,6 +29,10 @@ fun InventoryDetailScreen(
 
     val batch = batches.find { it.id == batchId }
 
+    LaunchedEffect(batch?.id) {
+        batch?.let { viewModel.trackInventoryAlertOpenedIfNeeded(it) }
+    }
+
     LaunchedEffect(batches) {
         println("🔍 Batch data -> $batches")
     }
