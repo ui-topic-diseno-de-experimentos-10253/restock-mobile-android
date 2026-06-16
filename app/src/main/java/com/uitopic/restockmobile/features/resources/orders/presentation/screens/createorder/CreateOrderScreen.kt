@@ -40,6 +40,7 @@ fun CreateOrderScreen(
     val orderBatchItems by viewModel.orderBatchItems.collectAsState()
     val totalAmount by viewModel.totalAmount.collectAsState()
 
+    val flowStartedAtMillis = remember { System.currentTimeMillis() }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
@@ -185,7 +186,10 @@ fun CreateOrderScreen(
                 }
                 Button(
                     onClick = {
+                        val durationSeconds = ((System.currentTimeMillis() - flowStartedAtMillis) / 1000)
+                            .coerceAtLeast(0)
                         viewModel.submitOrder(
+                            durationSeconds = durationSeconds,
                             onSuccess = onRequestSuccess,
                             onError = { error ->
                                 errorMessage = error
