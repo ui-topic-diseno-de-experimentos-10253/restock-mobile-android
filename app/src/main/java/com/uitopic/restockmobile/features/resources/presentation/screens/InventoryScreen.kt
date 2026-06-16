@@ -34,6 +34,10 @@ fun InventoryScreen(
 
     var searchQuery by remember { mutableStateOf("") }
 
+    LaunchedEffect(Unit) {
+        viewModel.trackRotationMetricViewed()
+    }
+
     val customSuppliesWithNames = customSupplies.map { custom ->
         val fullSupply = supplies.find { it.id == custom.supplyId } ?: custom.supply
         custom.copy(supply = fullSupply)
