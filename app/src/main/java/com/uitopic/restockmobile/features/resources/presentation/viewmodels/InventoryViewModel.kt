@@ -34,18 +34,24 @@ class InventoryViewModel @Inject constructor(
     private val _batches = MutableStateFlow<List<Batch>>(emptyList())
     val batches: StateFlow<List<Batch>> = _batches.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     init {
         loadAll()
     }
 
     fun loadAll() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 _supplies.value = repository.getSupplies()
                 _customSupplies.value = repository.getCustomSuppliesByUserId()
                 _batches.value = repository.getBatchesByUserId()
             } catch (t: Throwable) {
                 // TODO: manejar error (mostrar snackbar o log)
+            } finally {
+                _isLoading.value = false
             }
         }
     }

@@ -16,4 +16,7 @@ object AnalyticsParam {
 
     const val WASTE_AMOUNT = "waste_amount"
     const val UNIT = "unit"
+
+    const val NOTIFICATION_TYPE = "notification_type"
+    const val TIMESTAMP_MS = "timestamp_ms"
 }
