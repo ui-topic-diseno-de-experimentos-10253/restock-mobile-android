@@ -83,6 +83,34 @@ class RestockAnalytics @Inject constructor(
         )
     }
 
+    fun trackNotificationReceived(
+        notificationType: String,
+        supplyId: String
+    ) {
+        logEvent(
+            AnalyticsEvent.NOTIFICATION_RECEIVED,
+            Bundle().apply {
+                putString(AnalyticsParam.NOTIFICATION_TYPE, notificationType)
+                putString(AnalyticsParam.SUPPLY_ID, supplyId)
+            }
+        )
+    }
+
+    fun trackNotificationClicked(
+        notificationType: String,
+        supplyId: String,
+        timestampMs: Long
+    ) {
+        logEvent(
+            AnalyticsEvent.NOTIFICATION_CLICKED,
+            Bundle().apply {
+                putString(AnalyticsParam.NOTIFICATION_TYPE, notificationType)
+                putString(AnalyticsParam.SUPPLY_ID, supplyId)
+                putLong(AnalyticsParam.TIMESTAMP_MS, timestampMs)
+            }
+        )
+    }
+
     private fun logEvent(name: String, params: Bundle) {
         Log.d("RestockAnalytics", "Logging event: $name params=$params")
         firebaseAnalytics.logEvent(name, params)
