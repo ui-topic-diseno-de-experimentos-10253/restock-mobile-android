@@ -94,4 +94,9 @@ object NetworkModule {
     @Singleton
     fun provideOrdersApiService(@ApiRetrofit retrofit: Retrofit): OrdersService =
         retrofit.create(OrdersService::class.java)
+
+    @Provides
+    @Singleton
+    fun providePushTokenApiService(@ApiRetrofit retrofit: Retrofit): com.uitopic.restockmobile.core.notifications.data.remote.services.PushTokenApiService =
+        retrofit.create(com.uitopic.restockmobile.core.notifications.data.remote.services.PushTokenApiService::class.java)
 }
