@@ -40,9 +40,17 @@ import com.uitopic.restockmobile.shared.presentation.components.ItemSearchBar
 import com.uitopic.restockmobile.ui.theme.RestockmobileTheme
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.material.icons.filled.HelpOutline
+import com.uitopic.restockmobile.core.auth.local.TokenManager
+import com.uitopic.restockmobile.features.resources.orders.presentation.screens.onboarding.OrderOnboardingDialog
 import com.uitopic.restockmobile.features.resources.orders.presentation.screens.ui.OrderCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +58,7 @@ import com.uitopic.restockmobile.features.resources.orders.presentation.screens.
 fun OrdersScreen(
     modifier: Modifier = Modifier,
     viewModel: OrdersViewModel = hiltViewModel(),
+    tokenManager: TokenManager? = null,
 
     userName: String = "User",
     userEmail: String = "user@example.com",
@@ -83,7 +92,8 @@ fun OrdersScreen(
             modifier = Modifier.padding(innerPadding),
             userName = userName,
             onCreateOrder = onCreateOrder,
-            onOrderClick = onOrderClick
+            onOrderClick = onOrderClick,
+            tokenManager = tokenManager
         )
     }
 }
@@ -94,6 +104,7 @@ fun OrdersContent(
     modifier: Modifier = Modifier,
     viewModel: OrdersViewModel = viewModel(),
     userName: String = "User",
+    tokenManager: TokenManager? = null,
     onCreateOrder: () -> Unit,
     onOrderClick: (Int) -> Unit = {}
 ) {
@@ -101,8 +112,18 @@ fun OrdersContent(
     val filteredOrders by viewModel.filteredOrders.collectAsState()
     val allOrders by viewModel.orders.collectAsState()
 
+    // ── Onboarding state ──────────────────────────────────────────────────
+    var showOnboarding by remember {
+        // Auto-show only if the user hasn't seen it yet
+        mutableStateOf(tokenManager?.hasSeenOrderOnboarding() == false)
+    }
 
-    // Ordenes de ejemplo (temporal)
+    // Once all orders are loaded, also auto-show for users with no prior orders
+    LaunchedEffect(allOrders) {
+        if (allOrders.isEmpty() && tokenManager?.hasSeenOrderOnboarding() == false) {
+            showOnboarding = true
+        }
+    }
     /* val sampleOrders = remember {
         listOf(
             Order(
@@ -206,10 +227,29 @@ fun OrdersContent(
         allOrders
     }
 
+    // ── Onboarding dialog ────────────────────────────────────────────────
+    if (showOnboarding) {
+        OrderOnboardingDialog(
+            onDismiss = {
+                showOnboarding = false
+                tokenManager?.setSeenOrderOnboarding()
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Orders") }
+                title = { Text("Orders") },
+                actions = {
+                    IconButton(onClick = { showOnboarding = true }) {
+                        Icon(
+                            imageVector = Icons.Default.HelpOutline,
+                            contentDescription = "Ayuda — ¿Cómo hacer una orden?",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {

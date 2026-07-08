@@ -22,9 +22,13 @@ class RestockFirebaseMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var restockAnalytics: RestockAnalytics
 
+    @Inject
+    lateinit var pushNotificationManager: PushNotificationManager
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "Refreshed FCM token: $token")
+        pushNotificationManager.registerToken(token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -32,10 +36,10 @@ class RestockFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
         val data = remoteMessage.data
-        val notificationType = data["notification_type"]
-            ?: data["alert_type"]
-            ?: "stock_low"
-        val supplyId = data["supply_id"] ?: ""
+        val batchId = data["batchId"] ?: ""
+        val customSupplyId = data["customSupplyId"] ?: ""
+        val type = data["type"] ?: "stock_low"
+
         val title = remoteMessage.notification?.title
             ?: data["title"]
             ?: "Alerta de Inventario"
@@ -44,20 +48,22 @@ class RestockFirebaseMessagingService : FirebaseMessagingService() {
             ?: "Tienes una actualización relevante en tu inventario."
 
         // T-37-05: Registrar evento notification_received en Firebase Analytics
+        val supplyIdForAnalytics = if (customSupplyId.isNotEmpty()) customSupplyId else batchId
         restockAnalytics.trackNotificationReceived(
-            notificationType = notificationType,
-            supplyId = supplyId
+            notificationType = type,
+            supplyId = supplyIdForAnalytics
         )
 
         // T-37-01 & T-37-02: Mostrar notificación local con Deep Link Intent
-        showNotification(title, body, notificationType, supplyId)
+        showNotification(title, body, batchId, customSupplyId, type)
     }
 
     private fun showNotification(
         title: String,
         body: String,
-        notificationType: String,
-        supplyId: String
+        batchId: String,
+        customSupplyId: String,
+        type: String
     ) {
         val channelId = CHANNEL_ID
         val notificationManager =
@@ -76,11 +82,12 @@ class RestockFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // T-37-04: Intent para Deep Linking directo al detalle del insumo
+        // T-37-04: Intent para Deep Linking directo
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra(EXTRA_SUPPLY_ID, supplyId)
-            putExtra(EXTRA_NOTIFICATION_TYPE, notificationType)
+            putExtra(EXTRA_BATCH_ID, batchId)
+            putExtra(EXTRA_CUSTOM_SUPPLY_ID, customSupplyId)
+            putExtra(EXTRA_TYPE, type)
             putExtra(EXTRA_FROM_NOTIFICATION, true)
         }
 
@@ -111,8 +118,9 @@ class RestockFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val TAG = "RestockFCMService"
         const val CHANNEL_ID = "inventory_alerts_channel"
-        const val EXTRA_SUPPLY_ID = "supply_id"
-        const val EXTRA_NOTIFICATION_TYPE = "notification_type"
+        const val EXTRA_BATCH_ID = "batchId"
+        const val EXTRA_CUSTOM_SUPPLY_ID = "customSupplyId"
+        const val EXTRA_TYPE = "type"
         const val EXTRA_FROM_NOTIFICATION = "from_notification"
     }
 }

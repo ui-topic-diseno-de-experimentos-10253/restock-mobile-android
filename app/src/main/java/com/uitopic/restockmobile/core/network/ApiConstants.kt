@@ -23,10 +23,9 @@ object ApiConstants {
     private const val BASE_IP = "10.0.2.2" // Cambiar aquí con la IP de tu backend
     private const val PORT = "8080"        // Cambiar aquí con el puerto de tu backend
 
-    //private const val BASE_URL_PROD = "http://10.0.2.2:8080/api/v1/"
     private const val BASE_URL_PROD = "https://restock-platform-10253.onrender.com/api/v1/"
-    //const val BASE_URL = "http://$BASE_IP:$PORT/api/v1/"
-    const val BASE_URL = BASE_URL_PROD
+    private const val BASE_URL_LOCAL = "http://$BASE_IP:$PORT/api/v1/"
+    const val BASE_URL = BASE_URL_LOCAL
 
     // Timeouts
     const val CONNECT_TIMEOUT = 30L
