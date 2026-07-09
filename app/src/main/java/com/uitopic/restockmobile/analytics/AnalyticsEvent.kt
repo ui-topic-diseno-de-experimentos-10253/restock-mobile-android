@@ -6,4 +6,6 @@ object AnalyticsEvent {
     const val PURCHASE_ORDER_CREATED = "purchase_order_created"
     const val ROTATION_METRIC_VIEWED = "rotation_metric_viewed"
     const val WASTE_REPORT_REGISTERED = "waste_report_registered"
+    const val NOTIFICATION_RECEIVED = "notification_received"
+    const val NOTIFICATION_CLICKED = "notification_clicked"
 }

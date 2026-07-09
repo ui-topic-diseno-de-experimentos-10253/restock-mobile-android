@@ -17,6 +17,7 @@ import com.uitopic.restockmobile.features.resources.domain.models.CustomSupply
 @Composable
 fun SupplyDetailScreen(
     customSupply: CustomSupply?,
+    isLoading: Boolean = false,
     onBack: () -> Unit,
     onEditClick: (CustomSupply) -> Unit,
     onDeleteClick: (CustomSupply) -> Unit
@@ -44,7 +45,11 @@ fun SupplyDetailScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Supply not found.")
+                if (isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text("Supply not found.")
+                }
             }
             return@Scaffold
         }

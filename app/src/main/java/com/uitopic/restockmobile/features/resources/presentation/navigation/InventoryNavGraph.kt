@@ -45,7 +45,8 @@ fun NavGraphBuilder.inventoryNavGraph(navController: NavController) {
     composable("supply_form/{customSupplyId}") { backStackEntry ->
         val id = backStackEntry.arguments?.getString("customSupplyId")
         val viewModel: InventoryViewModel = hiltViewModel()
-        val existingSupply = viewModel.getCustomSupplyById(id!!.toInt())
+        val customSupplies by viewModel.customSupplies.collectAsState()
+        val existingSupply = customSupplies.find { it.id == id?.toIntOrNull() }
 
         SupplyFormScreen(
             viewModel = viewModel,
@@ -57,10 +58,13 @@ fun NavGraphBuilder.inventoryNavGraph(navController: NavController) {
     composable("supply_detail/{customSupplyId}") { backStackEntry ->
         val id = backStackEntry.arguments?.getString("customSupplyId") ?: return@composable
         val viewModel: InventoryViewModel = hiltViewModel()
-        val supply = viewModel.getCustomSupplyById(id.toInt())
+        val customSupplies by viewModel.customSupplies.collectAsState()
+        val isLoading by viewModel.isLoading.collectAsState()
+        val supply = customSupplies.find { it.id == id.toIntOrNull() }
 
         SupplyDetailScreen(
             customSupply = supply,
+            isLoading = isLoading,
             onBack = { navController.popBackStack() },
 
             onEditClick = { custom ->

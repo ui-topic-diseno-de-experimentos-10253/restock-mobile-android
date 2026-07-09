@@ -21,6 +21,7 @@ class TokenManager @Inject constructor(
         private const val KEY_USERNAME = "username"
         private const val KEY_ROLE_ID = "role_id"
         private const val KEY_SUBSCRIPTION = "subscription"
+        private const val KEY_SEEN_ORDER_ONBOARDING = "seen_order_onboarding"
     }
 
     fun saveToken(token: String) {
@@ -59,6 +60,14 @@ class TokenManager @Inject constructor(
 
     fun isLoggedIn(): Boolean {
         return getToken() != null
+    }
+
+    fun hasSeenOrderOnboarding(): Boolean {
+        return prefs.getBoolean(KEY_SEEN_ORDER_ONBOARDING, false)
+    }
+
+    fun setSeenOrderOnboarding() {
+        prefs.edit().putBoolean(KEY_SEEN_ORDER_ONBOARDING, true).apply()
     }
 
     fun clearAll() {

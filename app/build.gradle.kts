@@ -16,7 +16,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.uitopic.restockmobile"
+        applicationId = "com.uitopic.restockmobile.native"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -117,7 +117,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    //firebase analytics
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging)
 }

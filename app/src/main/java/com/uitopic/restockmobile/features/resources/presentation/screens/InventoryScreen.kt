@@ -1,6 +1,7 @@
 package com.uitopic.restockmobile.features.resources.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -70,27 +71,27 @@ fun InventoryScreen(
         )
     }
 
-    val greenColor = Color(0xFF4F8A5B)
-    val whiteColor = Color.White
+    val theme = MaterialTheme.colorScheme
 
     Scaffold(
-        containerColor = whiteColor,
+        containerColor = theme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Inventory Management", fontWeight = FontWeight.Bold) },
+                title = { Text("Kitchen Inventory", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = whiteColor,
-                    titleContentColor = Color.Black
+                    containerColor = theme.surface,
+                    titleContentColor = theme.onSurface
                 )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAddBatchClick,
-                containerColor = greenColor,
-                contentColor = whiteColor,
+                containerColor = theme.primary,
+                contentColor = theme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = "Add batch") },
-                text = { Text("New batch") }
+                text = { Text("New Batch", fontWeight = FontWeight.Bold) }
             )
         }
     ) { padding ->
@@ -99,7 +100,7 @@ fun InventoryScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
-                .background(whiteColor),
+                .background(theme.background),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 

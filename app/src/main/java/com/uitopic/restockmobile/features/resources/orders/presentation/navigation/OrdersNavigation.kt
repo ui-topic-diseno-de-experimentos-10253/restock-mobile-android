@@ -10,6 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.uitopic.restockmobile.core.auth.local.TokenManager
 import com.uitopic.restockmobile.features.resources.orders.presentation.screens.currentorders.OrderDetailScreen
 import com.uitopic.restockmobile.features.resources.orders.presentation.screens.currentorders.OrdersScreen
 import com.uitopic.restockmobile.features.resources.orders.presentation.screens.createorder.CreateOrderScreen
@@ -40,7 +41,8 @@ sealed class OrdersRoute(val route: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.ordersNavGraph(
     navController: NavController,
-    adminRestaurantId: Int
+    adminRestaurantId: Int,
+    tokenManager: TokenManager? = null
 ) {
     // PANTALLA PRINCIPAL DE ÓRDENES
     composable(OrdersRoute.Orders.route) { backStackEntry ->
@@ -48,6 +50,7 @@ fun NavGraphBuilder.ordersNavGraph(
 
         OrdersScreen(
             viewModel = ordersViewModel,
+            tokenManager = tokenManager,
             userName = "",
             userEmail = "",
             userAvatar = "",
