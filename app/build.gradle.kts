@@ -16,7 +16,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.uitopic.restockmobile"
+        applicationId = "com.uitopic.restockmobile.native"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

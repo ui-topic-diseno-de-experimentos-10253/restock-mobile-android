@@ -63,197 +63,42 @@ fun RestockScaffold(
     onLogout: () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            DrawerContent(
-                userName = userName,
-                userEmail = userEmail,
-                userAvatar = userAvatar,
-                onNavigateToHome = {
-                    scope.launch { drawerState.close(); onNavigateToHome() }
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black
+                    ) 
                 },
-                onNavigateToInventory = {
-                    scope.launch { drawerState.close(); onNavigateToInventory() }
-                },
-                onNavigateToRecipes = {
-                    scope.launch { drawerState.close(); onNavigateToRecipes() }
-                },
-                onNavigateToSales = {
-                    scope.launch { drawerState.close(); onNavigateToSales() }
-                },
-                onNavigateToProfile = {
-                    scope.launch { drawerState.close(); onNavigateToProfile() }
-                },
-                onLogout = {
-                    scope.launch { drawerState.close(); onLogout() }
-                },
-                onNavigateToOrders = {
-                    scope.launch { drawerState.close(); onNavigateToOrders() }
-                }
-            )
-        }
-    ) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                TopAppBar(
-                    title = { Text(title) },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, "Menu")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = onNavigateToProfile) {
-                            if (userAvatar.isNotBlank()) {
-                                AsyncImage(
-                                    model = userAvatar,
-                                    contentDescription = "Profile",
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(Icons.Default.AccountCircle, "Profile")
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
-            },
-            content = content
-        )
-    }
-}
-
-
-@Composable
-fun DrawerContent(
-    userName: String,
-    userEmail: String,
-    userAvatar: String,
-    onNavigateToHome: () -> Unit,
-    onNavigateToRecipes: () -> Unit,
-    onNavigateToInventory: () -> Unit,
-    onNavigateToSales: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToOrders: () -> Unit,
-    onLogout: () -> Unit
-) {
-    ModalDrawerSheet(
-        drawerContainerColor = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // User Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (userAvatar.isNotBlank()) {
-                    AsyncImage(
-                        model = userAvatar,
-                        contentDescription = "Profile",
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.size(64.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
+                actions = {
+                    IconButton(onClick = onNavigateToProfile) {
+                        if (userAvatar.isNotBlank()) {
+                            AsyncImage(
+                                model = userAvatar,
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
                             Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Profile",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
-                }
-
-                Column {
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = userEmail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(.3f))
-
-            // Navigation Items
-            DrawerMenuItem(
-                icon = Icons.Default.Home,
-                label = "Home",
-                onClick = onNavigateToHome
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
-
-            DrawerMenuItem(
-                icon = Icons.Default.Inventory,
-                label = "Inventory",
-                onClick = onNavigateToInventory
-            )
-
-            DrawerMenuItem(
-                icon = Icons.Default.ShoppingCart,
-                label = "Orders",
-                onClick = onNavigateToOrders
-            )
-
-            DrawerMenuItem(
-                icon = Icons.Default.Restaurant,
-                label = "Recipes",
-                onClick = onNavigateToRecipes
-            )
-
-            DrawerMenuItem(
-                icon = Icons.Outlined.PointOfSale,
-                label = "Sales",
-                onClick = onNavigateToSales
-            )
-
-            DrawerMenuItem(
-                icon = Icons.Default.Person,
-                label = "Profile",
-                onClick = onNavigateToProfile
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(.3f))
-
-            DrawerMenuItem(
-                icon = Icons.Default.Logout,
-                label = "Logout",
-                onClick = onLogout,
-                isDestructive = true
-            )
-        }
-    }
+        },
+        content = content
+    )
 }

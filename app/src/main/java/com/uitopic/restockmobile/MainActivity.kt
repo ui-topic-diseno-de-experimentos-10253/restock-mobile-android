@@ -21,6 +21,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.uitopic.restockmobile.analytics.RestockAnalytics
 import com.uitopic.restockmobile.core.auth.local.TokenManager
 import com.uitopic.restockmobile.core.notifications.PushNotificationManager
@@ -186,59 +210,185 @@ fun RestockApp(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val showBottomBar = isLoggedIn && subscription != 0 && when (currentRoute) {
+        HomeRoute.Home.route,
+        "inventory",
+        "orders",
+        "recipes_list",
+        "profile_detail" -> true
+        else -> false
+    }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            if (showBottomBar) {
+                RestockBottomBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = if (showBottomBar) innerPadding.calculateBottomPadding() else 0.dp)
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination
+            ) {
+                // Auth Graph
+                authNavGraph(
+                    navController = navController,
+                    onAuthSuccess = { sub ->
+                        if (sub == 0) {
+                            navController.navigate(SubscriptionRoute.SubscriptionGraph) {
+                                popUpTo("auth_graph") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(HomeRoute.Home.route) {
+                                popUpTo("auth_graph") { inclusive = true }
+                            }
+                        }
+                    }
+                )
+
+                // Subscription Graph
+                subscriptionNavGraph(
+                    navController = navController,
+                    onSubscriptionComplete = {
+                        navController.navigate(HomeRoute.Home.route) {
+                            popUpTo(SubscriptionRoute.SubscriptionGraph) { inclusive = true }
+                        }
+                    }
+                )
+
+                // Home Screen
+                homeNavGraph(navController)
+                // Monitoring Graph (Sales)
+                monitoringNavGraph(navController)
+                // Profile Graph
+                profileNavGraph(
+                    navController = navController,
+                    onAccountDeleted = {
+                        navController.navigate("auth_graph") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+                // Inventory
+                inventoryNavGraph(navController)
+                // Planning (Recipes)
+                planningNavGraph(navController)
+
+                // Resources - Orders
+                ordersNavGraph(
+                    navController = navController,
+                    adminRestaurantId = 1,
+                    tokenManager = tokenManager
+                )
+            }
+        }
+    }
+}
+
+enum class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String
+) {
+    Home(HomeRoute.Home.route, Icons.Default.Home, "Inicio"),
+    Inventory("inventory", Icons.Default.Inventory, "Inventario"),
+    Orders("orders", Icons.Default.ShoppingCart, "Pedidos"),
+    Recipes("planning", Icons.Default.Restaurant, "Recetas"),
+    Profile("profile_graph", Icons.Default.Person, "Perfil")
+}
+
+@Composable
+fun RestockBottomBar(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit
+) {
+    val selectedItem = when (currentRoute) {
+        HomeRoute.Home.route -> BottomNavItem.Home
+        "inventory" -> BottomNavItem.Inventory
+        "orders" -> BottomNavItem.Orders
+        "recipes_list" -> BottomNavItem.Recipes
+        "profile_detail" -> BottomNavItem.Profile
+        else -> null
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), clip = false)
+            .height(68.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White
     ) {
-        // Auth Graph
-        authNavGraph(
-            navController = navController,
-            onAuthSuccess = { sub ->
-                if (sub == 0) {
-                    navController.navigate(SubscriptionRoute.SubscriptionGraph) {
-                        popUpTo("auth_graph") { inclusive = true }
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem.values().forEach { item ->
+                val isSelected = selectedItem == item
+                val contentColor by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray,
+                    label = "color"
+                )
+                val backgroundColor by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent,
+                    label = "bgColor"
+                )
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { onNavigate(item.route) }
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 44.dp, height = 28.dp)
+                            .background(backgroundColor, shape = RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = contentColor,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                } else {
-                    navController.navigate(HomeRoute.Home.route) {
-                        popUpTo("auth_graph") { inclusive = true }
-                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = item.label,
+                        color = contentColor,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
                 }
             }
-        )
-
-        // Subscription Graph
-        subscriptionNavGraph(
-            navController = navController,
-            onSubscriptionComplete = {
-                navController.navigate(HomeRoute.Home.route) {
-                    popUpTo(SubscriptionRoute.SubscriptionGraph) { inclusive = true }
-                }
-            }
-        )
-
-        // Home Screen
-        homeNavGraph(navController)
-        // Monitoring Graph (Sales)
-        monitoringNavGraph(navController)
-        // Profile Graph
-        profileNavGraph(
-            navController = navController,
-            onAccountDeleted = {
-                navController.navigate("auth_graph") {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-        )
-        // Inventory
-        inventoryNavGraph(navController)
-        // Planning (Recipes)
-        planningNavGraph(navController)
-
-        // Resources - Orders
-        ordersNavGraph(
-            navController = navController,
-            adminRestaurantId = 1,
-            tokenManager = tokenManager
-        )
+        }
     }
 }
