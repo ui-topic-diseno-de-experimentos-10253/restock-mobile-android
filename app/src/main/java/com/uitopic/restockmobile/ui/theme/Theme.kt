@@ -25,8 +25,8 @@ private val DarkColorScheme = darkColorScheme(
     outline = Color(0xFF303845),
     error = RestockError,
     onError = RestockOnError,
-    primaryContainer = Color(0xFF8C2000),               // contenedor terracota oscuro
-    onPrimaryContainer = Color(0xFFFFCCBC)
+    primaryContainer = Color(0xFF1B5E20),               // contenedor verde oscuro original
+    onPrimaryContainer = Color(0xFFCDEDCB)
 )
 
 private val LightColorScheme = lightColorScheme(
